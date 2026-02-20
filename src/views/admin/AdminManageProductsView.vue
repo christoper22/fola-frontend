@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import axios, { isAxiosError } from 'axios'
+import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import { formatRupiah } from '@/utils/format'
 
 interface Product {
   id: number
@@ -9,6 +10,7 @@ interface Product {
   description: string
   price: number
   image: string
+  link?: string // Add link field
   createdAt: string
 }
 
@@ -26,6 +28,7 @@ const newProduct = ref({
   description: '',
   price: 0,
   image: null as File | null,
+  link: '', // Add link field
 })
 const editingProduct = ref<Product | null>(null)
 const deletingProductId = ref<number | null>(null)
@@ -34,12 +37,8 @@ const fetchProducts = async () => {
   try {
     const response = await axios.get('http://localhost:5000/api/products')
     products.value = response.data.products
-  } catch (err: unknown) {
-    if (isAxiosError(err)) {
-      error.value = err.response?.data?.error || 'Failed to load products.'
-    } else {
-      error.value = 'An unexpected error occurred.'
-    }
+  } catch (err: any) {
+    error.value = err.response?.data?.error || 'Failed to load products.'
     console.error(err)
   } finally {
     loading.value = false
@@ -54,7 +53,7 @@ const handleImageUpload = (event: Event) => {
     if (showAddModal.value) {
       newProduct.value.image = target.files[0]
     } else if (showEditModal.value && editingProduct.value) {
-      editingProduct.value.image = target.files[0];
+      editingProduct.value.image = target.files[0] as any // Cast to any for now
     }
   }
 }
@@ -66,10 +65,10 @@ const addProduct = async () => {
     formData.append('description', newProduct.value.description)
     formData.append('price', newProduct.value.price.toString())
     if (newProduct.value.image) {
-      const imageToAppend = newProduct.value.image;
-      if (imageToAppend instanceof File) {
-        formData.append('image', imageToAppend);
-      }
+      formData.append('image', newProduct.value.image)
+    }
+    if (newProduct.value.link) {
+      formData.append('link', newProduct.value.link)
     }
 
     await axios.post('http://localhost:5000/api/products', formData, {
@@ -81,12 +80,8 @@ const addProduct = async () => {
     showAddModal.value = false
     newProduct.value = { name: '', description: '', price: 0, image: null }
     fetchProducts()
-  } catch (err: unknown) {
-    if (isAxiosError(err)) {
-      error.value = err.response?.data?.error || 'Failed to add product.'
-    } else {
-      error.value = 'An unexpected error occurred.'
-    }
+  } catch (err: any) {
+    error.value = err.response?.data?.error || 'Failed to add product.'
     console.error(err)
   }
 }
@@ -104,11 +99,11 @@ const updateProduct = async () => {
     formData.append('name', editingProduct.value.name)
     formData.append('description', editingProduct.value.description)
     formData.append('price', editingProduct.value.price.toString())
-    if (editingProduct.value.image) {
-      const imageToAppend = editingProduct.value.image;
-      if (imageToAppend instanceof File) {
-        formData.append('image', imageToAppend);
-      }
+    if (editingProduct.value.image && typeof editingProduct.value.image !== 'string') {
+      formData.append('image', editingProduct.value.image)
+    }
+    if (editingProduct.value.link) {
+      formData.append('link', editingProduct.value.link)
     }
 
     await axios.put(`http://localhost:5000/api/products/${editingProduct.value.id}`, formData, {
@@ -120,12 +115,8 @@ const updateProduct = async () => {
     showEditModal.value = false
     editingProduct.value = null
     fetchProducts()
-  } catch (err: unknown) {
-    if (isAxiosError(err)) {
-      error.value = err.response?.data?.error || 'Failed to update product.'
-    } else {
-      error.value = 'An unexpected error occurred.'
-    }
+  } catch (err: any) {
+    error.value = err.response?.data?.error || 'Failed to update product.'
     console.error(err)
   }
 }
@@ -147,62 +138,58 @@ const deleteProduct = async () => {
     showDeleteModal.value = false
     deletingProductId.value = null
     fetchProducts()
-  } catch (err: unknown) {
-    if (isAxiosError(err)) {
-      error.value = err.response?.data?.error || 'Failed to delete product.'
-    } else {
-      error.value = 'An unexpected error occurred.'
-    }
+  } catch (err: any) {
+    error.value = err.response?.data?.error || 'Failed to delete product.'
     console.error(err)
   }
 }
 </script>
 
 <template>
-  <div class="admin-manage-products-view p-6 bg-white shadow-md rounded-lg">
-    <h1 class="text-4xl font-bold text-gray-800 mb-6 border-b-2 pb-2">Manage Products</h1>
+  <div class="admin-manage-products-view p-6 bg-background-light min-h-screen">
+    <h1 class="text-4xl font-bold text-text-light mb-6 border-b-2 border-border-color pb-2">Manage Products</h1>
 
     <button
       @click="showAddModal = true"
-      class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded mb-6"
+      class="bg-primary-red hover:bg-secondary-red text-text-light font-bold py-2 px-4 rounded mb-6 transition duration-300"
     >
       Add New Product
     </button>
 
-    <div v-if="loading" class="text-center py-8">Loading products...</div>
-    <div v-else-if="error" class="text-center py-8 text-red-500">{{ error }}</div>
+    <div v-if="loading" class="text-center py-8 text-text-dark">Loading products...</div>
+    <div v-else-if="error" class="text-center py-8 text-primary-red">{{ error }}</div>
     <div v-else>
-      <div v-if="products.length > 0" class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-200">
+      <div v-if="products.length > 0" class="overflow-x-auto bg-secondary-black rounded-lg shadow-lg">
+        <table class="min-w-full border border-border-color">
           <thead>
             <tr>
-              <th class="py-2 px-4 border-b text-left">Image</th>
-              <th class="py-2 px-4 border-b text-left">Name</th>
-              <th class="py-2 px-4 border-b text-left">Price</th>
-              <th class="py-2 px-4 border-b text-left">Actions</th>
+              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">Image</th>
+              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">Name</th>
+              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">Price</th>
+              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="product in products" :key="product.id">
-              <td class="py-2 px-4 border-b">
+            <tr v-for="product in products" :key="product.id" class="hover:bg-primary-black transition duration-200">
+              <td class="py-2 px-4 border-b border-border-color">
                 <img
-                  :src="`/uploads/products/${product.image}`"
+                  :src="`${product.image}`"
                   :alt="product.name"
-                  class="w-full h-48 object-cover rounded"
+                  class="w-16 h-16 object-cover rounded"
                 />
               </td>
-              <td class="py-2 px-4 border-b">{{ product.name }}</td>
-              <td class="py-2 px-4 border-b">${{ product.price.toFixed(2) }}</td>
-              <td class="py-2 px-4 border-b">
+              <td class="py-2 px-4 border-b border-border-color text-text-dark">{{ product.name }}</td>
+              <td class="py-2 px-4 border-b border-border-color text-primary-red">{{ formatRupiah(product.price) }}</td>
+              <td class="py-2 px-4 border-b border-border-color">
                 <button
                   @click="openEditModal(product)"
-                  class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm mr-2"
+                  class="bg-primary-red hover:bg-secondary-red text-text-light py-1 px-3 rounded text-sm mr-2 transition duration-300"
                 >
                   Edit
                 </button>
                 <button
                   @click="openDeleteModal(product.id)"
-                  class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm"
+                  class="bg-primary-red hover:bg-secondary-red text-text-light py-1 px-3 rounded text-sm transition duration-300"
                 >
                   Delete
                 </button>
@@ -211,56 +198,56 @@ const deleteProduct = async () => {
           </tbody>
         </table>
       </div>
-      <p v-else class="text-gray-600">No products found.</p>
+      <p v-else class="text-text-dark mt-4">No products found.</p>
     </div>
 
     <!-- Add Product Modal -->
     <div
       v-if="showAddModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center"
+      class="fixed inset-0 bg-primary-black bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center z-50"
     >
-      <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-        <h2 class="text-2xl font-bold mb-4">Add New Product</h2>
+      <div class="bg-secondary-black p-8 rounded-lg shadow-xl w-full max-w-md">
+        <h2 class="text-2xl font-bold text-text-light mb-4">Add New Product</h2>
         <form @submit.prevent="addProduct" class="space-y-4">
           <div>
-            <label for="newProductName" class="block text-gray-700 text-sm font-bold mb-2"
+            <label for="newProductName" class="block text-text-dark text-sm font-bold mb-2"
               >Name:</label
             >
             <input
               type="text"
               id="newProductName"
               v-model="newProduct.name"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
+              class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline"
               required
             />
           </div>
           <div>
-            <label for="newProductDescription" class="block text-gray-700 text-sm font-bold mb-2"
+            <label for="newProductDescription" class="block text-text-dark text-sm font-bold mb-2"
               >Description:</label
             >
             <textarea
               id="newProductDescription"
               v-model="newProduct.description"
               rows="3"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
+              class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline"
               required
             ></textarea>
           </div>
           <div>
-            <label for="newProductPrice" class="block text-gray-700 text-sm font-bold mb-2"
+            <label for="newProductPrice" class="block text-text-dark text-sm font-bold mb-2"
               >Price:</label
             >
             <input
               type="number"
               id="newProductPrice"
               v-model.number="newProduct.price"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
+              class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline"
               step="0.01"
               required
             />
           </div>
           <div>
-            <label for="newProductImage" class="block text-gray-700 text-sm font-bold mb-2"
+            <label for="newProductImage" class="block text-text-dark text-sm font-bold mb-2"
               >Image:</label
             >
             <input
@@ -268,21 +255,32 @@ const deleteProduct = async () => {
               id="newProductImage"
               @change="handleImageUpload"
               accept="image/*"
-              class="block w-full text-sm text-gray-500"
+              class="block w-full text-sm text-text-dark"
               required
+            />
+          </div>
+          <div>
+            <label for="newProductLink" class="block text-text-dark text-sm font-bold mb-2"
+              >Link (Optional):</label
+            >
+            <input
+              type="url"
+              id="newProductLink"
+              v-model="newProduct.link"
+              class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline"
             />
           </div>
           <div class="flex justify-end space-x-4">
             <button
               type="button"
               @click="showAddModal = false"
-              class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+              class="bg-primary-black hover:bg-secondary-black text-text-light font-bold py-2 px-4 rounded transition duration-300"
             >
               Cancel
             </button>
             <button
               type="submit"
-              class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+              class="bg-primary-red hover:bg-secondary-red text-text-light font-bold py-2 px-4 rounded transition duration-300"
             >
               Add Product
             </button>
@@ -294,50 +292,50 @@ const deleteProduct = async () => {
     <!-- Edit Product Modal -->
     <div
       v-if="showEditModal && editingProduct"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center"
+      class="fixed inset-0 bg-primary-black bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center z-50"
     >
-      <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-        <h2 class="text-2xl font-bold mb-4">Edit Product</h2>
+      <div class="bg-secondary-black p-8 rounded-lg shadow-xl w-full max-w-md">
+        <h2 class="text-2xl font-bold text-text-light mb-4">Edit Product</h2>
         <form @submit.prevent="updateProduct" class="space-y-4">
           <div>
-            <label for="editProductName" class="block text-gray-700 text-sm font-bold mb-2"
+            <label for="editProductName" class="block text-text-dark text-sm font-bold mb-2"
               >Name:</label
             >
             <input
               type="text"
               id="editProductName"
               v-model="editingProduct.name"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
+              class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline"
               required
             />
           </div>
           <div>
-            <label for="editProductDescription" class="block text-gray-700 text-sm font-bold mb-2"
+            <label for="editProductDescription" class="block text-text-dark text-sm font-bold mb-2"
               >Description:</label
             >
             <textarea
               id="editProductDescription"
               v-model="editingProduct.description"
               rows="3"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
+              class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline"
               required
             ></textarea>
           </div>
           <div>
-            <label for="editProductPrice" class="block text-gray-700 text-sm font-bold mb-2"
+            <label for="editProductPrice" class="block text-text-dark text-sm font-bold mb-2"
               >Price:</label
             >
             <input
               type="number"
               id="editProductPrice"
               v-model.number="editingProduct.price"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
+              class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline"
               step="0.01"
               required
             />
           </div>
           <div>
-            <label for="editProductImage" class="block text-gray-700 text-sm font-bold mb-2"
+            <label for="editProductImage" class="block text-text-dark text-sm font-bold mb-2"
               >Image:</label
             >
             <input
@@ -345,31 +343,42 @@ const deleteProduct = async () => {
               id="editProductImage"
               @change="handleImageUpload"
               accept="image/*"
-              class="block w-full text-sm text-gray-500"
+              class="block w-full text-sm text-text-dark"
             />
             <div
               v-if="editingProduct.image && typeof editingProduct.image === 'string'"
               class="mt-2"
             >
-              <p class="text-gray-600">Current Image:</p>
+              <p class="text-text-dark">Current Image:</p>
               <img
-                :src="`/uploads/products/${editingProduct.image}`"
+                :src="`${editingProduct.image}`"
                 :alt="editingProduct.name"
                 class="w-24 h-24 object-cover rounded mt-1"
               />
             </div>
           </div>
+          <div>
+            <label for="editProductLink" class="block text-text-dark text-sm font-bold mb-2"
+              >Link (Optional):</label
+            >
+            <input
+              type="url"
+              id="editProductLink"
+              v-model="editingProduct.link"
+              class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline"
+            />
+          </div>
           <div class="flex justify-end space-x-4">
             <button
               type="button"
               @click="showEditModal = false"
-              class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+              class="bg-primary-black hover:bg-secondary-black text-text-light font-bold py-2 px-4 rounded transition duration-300"
             >
               Cancel
             </button>
             <button
               type="submit"
-              class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+              class="bg-primary-red hover:bg-secondary-red text-text-light font-bold py-2 px-4 rounded transition duration-300"
             >
               Update Product
             </button>
@@ -381,25 +390,25 @@ const deleteProduct = async () => {
     <!-- Delete Product Modal -->
     <div
       v-if="showDeleteModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center"
+      class="fixed inset-0 bg-primary-black bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center z-50"
     >
-      <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md text-center">
-        <h2 class="text-2xl font-bold mb-4">Confirm Delete</h2>
-        <p class="mb-6">
+      <div class="bg-secondary-black p-8 rounded-lg shadow-xl w-full max-w-md text-center">
+        <h2 class="text-2xl font-bold text-text-light mb-4">Confirm Delete</h2>
+        <p class="mb-6 text-text-dark">
           Are you sure you want to delete this product? This action cannot be undone.
         </p>
         <div class="flex justify-center space-x-4">
           <button
             type="button"
             @click="showDeleteModal = false"
-            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+            class="bg-primary-black hover:bg-secondary-black text-text-light font-bold py-2 px-4 rounded transition duration-300"
           >
             Cancel
           </button>
           <button
             type="button"
             @click="deleteProduct"
-            class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+            class="bg-primary-red hover:bg-secondary-red text-text-light font-bold py-2 px-4 rounded transition duration-300"
           >
             Delete
           </button>

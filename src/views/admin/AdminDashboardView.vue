@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
@@ -24,6 +24,22 @@ const latestMessages = ref<Message[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
+const animatedTotalProducts = ref(0);
+const animatedTotalMessages = ref(0);
+
+const animateValue = (start: number, end: number, duration: number, callback: (value: number) => void) => {
+  let startTimestamp: number | null = null;
+  const step = (timestamp: number) => {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    callback(Math.floor(progress * (end - start) + start));
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    }
+  };
+  window.requestAnimationFrame(step);
+};
+
 onMounted(async () => {
   try {
     const response = await axios.get('http://localhost:5000/api/dashboard/admin', {
@@ -42,49 +58,104 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+watch(totalProducts, (newValue) => {
+  animateValue(0, newValue, 1000, (value) => (animatedTotalProducts.value = value));
+});
+
+watch(totalMessages, (newValue) => {
+  animateValue(0, newValue, 1000, (value) => (animatedTotalMessages.value = value));
+});
 </script>
 
 <template>
-  <div class="admin-dashboard-view p-6 bg-white shadow-md rounded-lg">
-    <h1 class="text-4xl font-bold text-gray-800 mb-6 border-b-2 pb-2">Admin Dashboard</h1>
+  <div class="admin-dashboard-view p-6 bg-background-light min-h-screen">
+    <h1 class="text-text-light text-4xl font-bold mb-8">Admin Dashboard</h1>
 
-    <div v-if="loading" class="text-center py-8">Loading dashboard data...</div>
-    <div v-else-if="error" class="text-center py-8 text-red-500">{{ error }}</div>
-    <div v-else>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="bg-blue-100 p-6 rounded-lg shadow-md text-center">
-          <h2 class="text-2xl font-semibold text-blue-800">Total Products</h2>
-          <p class="text-5xl font-bold text-blue-600 mt-2">{{ totalProducts }}</p>
+    <div v-if="loading" class="text-center py-10">
+      <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+    <div v-else-if="error" class="text-center py-10 text-primary-red bg-secondary-black p-4 rounded-lg">{{ error }}</div>
+    <div v-else class="space-y-10">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Total Products Card -->
+        <div
+          class="bg-secondary-black p-6 rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300 animate-fade-in-up"
+          style="animation-delay: 0.1s"
+        >
+          <h2 class="text-2xl font-semibold text-text-light">Total Products</h2>
+          <p class="text-5xl font-bold text-primary-red mt-2 animate-count-up">{{ animatedTotalProducts }}</p>
         </div>
-        <div class="bg-green-100 p-6 rounded-lg shadow-md text-center">
-          <h2 class="text-2xl font-semibold text-green-800">Total Messages</h2>
-          <p class="text-5xl font-bold text-green-600 mt-2">{{ totalMessages }}</p>
+        <!-- Total Messages Card -->
+        <div
+          class="bg-secondary-black p-6 rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300 animate-fade-in-up"
+          style="animation-delay: 0.2s"
+        >
+          <h2 class="text-2xl font-semibold text-text-light">Total Messages</h2>
+          <p class="text-5xl font-bold text-primary-red mt-2 animate-count-up">{{ animatedTotalMessages }}</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-gray-50 p-6 rounded-lg shadow-md">
-          <h2 class="text-2xl font-semibold text-gray-700 mb-4">Latest Products</h2>
-          <ul v-if="latestProducts.length > 0" class="space-y-2">
-            <li v-for="product in latestProducts" :key="product.id" class="flex justify-between items-center border-b pb-2">
-              <span>{{ product.name }}</span>
-              <span class="text-sm text-gray-500">{{ new Date(product.createdAt).toLocaleDateString() }}</span>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Latest Products List -->
+        <div
+          class="bg-secondary-black p-6 rounded-xl shadow-lg animate-fade-in-up"
+          style="animation-delay: 0.3s"
+        >
+          <h2 class="text-2xl font-semibold text-text-light mb-4">Latest Products</h2>
+          <ul v-if="latestProducts.length > 0" class="space-y-3">
+            <li
+              v-for="(product, index) in latestProducts"
+              :key="product.id"
+              class="flex justify-between items-center border-b border-border-color pb-2 animate-fade-in-up"
+              :style="{ 'animation-delay': `${0.4 + index * 0.1}s` }"
+            >
+              <span class="font-medium text-text-light">{{ product.name }}</span>
+              <span class="text-sm text-text-dark">{{ new Date(product.createdAt).toLocaleDateString() }}</span>
             </li>
           </ul>
-          <p v-else class="text-gray-600">No latest products.</p>
+          <p v-else class="text-text-dark">No latest products.</p>
         </div>
 
-        <div class="bg-gray-50 p-6 rounded-lg shadow-md">
-          <h2 class="text-2xl font-semibold text-gray-700 mb-4">Latest Messages</h2>
-          <ul v-if="latestMessages.length > 0" class="space-y-2">
-            <li v-for="message in latestMessages" :key="message.id" class="border-b pb-2">
-              <p class="font-medium">{{ message.name }} ({{ message.email }})</p>
-              <p class="text-sm text-gray-500">{{ new Date(message.createdAt).toLocaleDateString() }}</p>
+        <!-- Latest Messages List -->
+        <div
+          class="bg-secondary-black p-6 rounded-xl shadow-lg animate-fade-in-up"
+          style="animation-delay: 0.4s"
+        >
+          <h2 class="text-2xl font-semibold text-text-light mb-4">Latest Messages</h2>
+          <ul v-if="latestMessages.length > 0" class="space-y-3">
+            <li
+              v-for="(message, index) in latestMessages"
+              :key="message.id"
+              class="border-b border-border-color pb-2 animate-fade-in-up"
+              :style="{ 'animation-delay': `${0.5 + index * 0.1}s` }"
+            >
+              <p class="font-medium text-text-light">{{ message.name }} ({{ message.email }})</p>
+              <p class="text-sm text-text-dark">{{ new Date(message.createdAt).toLocaleDateString() }}</p>
             </li>
           </ul>
-          <p v-else class="text-gray-600">No latest messages.</p>
+          <p v-else class="text-text-dark">No latest messages.</p>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.spinner-border {
+  border-color: transparent;
+  border-top-color: var(--color-primary-red);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+</style>
