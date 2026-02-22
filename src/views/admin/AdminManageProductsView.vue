@@ -147,11 +147,13 @@ const deleteProduct = async () => {
 
 <template>
   <div class="admin-manage-products-view p-6 bg-background-light min-h-screen">
-    <h1 class="text-4xl font-bold text-text-light mb-6 border-b-2 border-border-color pb-2">Manage Products</h1>
+    <h1 class="text-4xl font-bold text-text-light mb-6 border-b-2 border-border-color pb-2">
+      Manage Products
+    </h1>
 
     <button
       @click="showAddModal = true"
-      class="bg-primary-red hover:bg-secondary-red text-text-light font-bold py-2 px-4 rounded mb-6 transition duration-300"
+      class="bg-gray-500 hover:bg-secondary-red text-white font-bold py-2 px-4 rounded mb-6 transition duration-300"
     >
       Add New Product
     </button>
@@ -159,18 +161,31 @@ const deleteProduct = async () => {
     <div v-if="loading" class="text-center py-8 text-text-dark">Loading products...</div>
     <div v-else-if="error" class="text-center py-8 text-primary-red">{{ error }}</div>
     <div v-else>
-      <div v-if="products.length > 0" class="overflow-x-auto bg-secondary-black rounded-lg shadow-lg">
+      <div
+        v-if="products.length > 0"
+        class="overflow-x-auto bg-secondary-black rounded-lg shadow-lg"
+      >
         <table class="min-w-full border border-border-color">
           <thead>
             <tr>
-              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">Image</th>
+              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">
+                Image
+              </th>
               <th class="py-3 px-4 border-b border-border-color text-left text-text-light">Name</th>
-              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">Price</th>
-              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">Actions</th>
+              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">
+                Price
+              </th>
+              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="product in products" :key="product.id" class="hover:bg-primary-black transition duration-200">
+            <tr
+              v-for="product in products"
+              :key="product.id"
+              class="hover:bg-primary-black transition duration-200"
+            >
               <td class="py-2 px-4 border-b border-border-color">
                 <img
                   :src="`${product.image}`"
@@ -178,18 +193,22 @@ const deleteProduct = async () => {
                   class="w-16 h-16 object-cover rounded"
                 />
               </td>
-              <td class="py-2 px-4 border-b border-border-color text-text-dark">{{ product.name }}</td>
-              <td class="py-2 px-4 border-b border-border-color text-primary-red">{{ formatRupiah(product.price) }}</td>
+              <td class="py-2 px-4 border-b border-border-color text-text-dark">
+                {{ product.name }}
+              </td>
+              <td class="py-2 px-4 border-b border-border-color text-primary-red">
+                {{ formatRupiah(product.price) }}
+              </td>
               <td class="py-2 px-4 border-b border-border-color">
                 <button
                   @click="openEditModal(product)"
-                  class="bg-primary-red hover:bg-secondary-red text-text-light py-1 px-3 rounded text-sm mr-2 transition duration-300"
+                  class="bg-amber-200 hover:bg-secondary-red text-text-light py-1 px-3 rounded text-sm mr-2 transition duration-300"
                 >
                   Edit
                 </button>
                 <button
                   @click="openDeleteModal(product.id)"
-                  class="bg-primary-red hover:bg-secondary-red text-text-light py-1 px-3 rounded text-sm transition duration-300"
+                  class="bg-red-200 hover:bg-secondary-red text-text-light py-1 px-3 rounded text-sm transition duration-300"
                 >
                   Delete
                 </button>
@@ -206,7 +225,7 @@ const deleteProduct = async () => {
       v-if="showAddModal"
       class="fixed inset-0 bg-primary-black bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center z-50"
     >
-      <div class="bg-secondary-black p-8 rounded-lg shadow-xl w-full max-w-md">
+      <div class="bg-gray-300 p-8 rounded-lg shadow-xl w-full max-w-md">
         <h2 class="text-2xl font-bold text-text-light mb-4">Add New Product</h2>
         <form @submit.prevent="addProduct" class="space-y-4">
           <div>

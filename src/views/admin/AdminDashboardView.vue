@@ -1,44 +1,62 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import axios from 'axios';
-import { useAuthStore } from '@/stores/auth';
+import { ref, onMounted, watch } from 'vue'
+import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 interface Product {
-  id: number;
-  name: string;
-  createdAt: string;
+  id: number
+  name: string
+  createdAt: string
 }
 
 interface Message {
-  id: number;
-  name: string;
-  email: string;
-  createdAt: string;
+  id: number
+  name: string
+  email: string
+  createdAt: string
 }
 
-const authStore = useAuthStore();
-const totalProducts = ref(0);
-const totalMessages = ref(0);
-const latestProducts = ref<Product[]>([]);
-const latestMessages = ref<Message[]>([]);
-const loading = ref(true);
-const error = ref<string | null>(null);
+const authStore = useAuthStore()
+const totalProducts = ref(0)
+const totalMessages = ref(0)
+const latestProducts = ref<Product[]>([])
+const latestMessages = ref<Message[]>([])
+const loading = ref(true)
+const error = ref<string | null>(null)
 
-const animatedTotalProducts = ref(0);
-const animatedTotalMessages = ref(0);
+const animatedTotalProducts = ref(0)
+const animatedTotalMessages = ref(0)
 
-const animateValue = (start: number, end: number, duration: number, callback: (value: number) => void) => {
-  let startTimestamp: number | null = null;
+const selectedMessage = ref(null)
+const showModal = ref(false)
+
+const openModal = (message) => {
+  selectedMessage.value = message
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  selectedMessage.value = null
+}
+
+const animateValue = (
+  start: number,
+  end: number,
+  duration: number,
+  callback: (value: number) => void,
+) => {
+  let startTimestamp: number | null = null
   const step = (timestamp: number) => {
-    if (!startTimestamp) startTimestamp = timestamp;
-    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-    callback(Math.floor(progress * (end - start) + start));
+    if (!startTimestamp) startTimestamp = timestamp
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1)
+    callback(Math.floor(progress * (end - start) + start))
     if (progress < 1) {
-      window.requestAnimationFrame(step);
+      window.requestAnimationFrame(step)
     }
-  };
-  window.requestAnimationFrame(step);
-};
+  }
+  window.requestAnimationFrame(step)
+}
 
 onMounted(async () => {
   try {
@@ -46,26 +64,26 @@ onMounted(async () => {
       headers: {
         Authorization: `Bearer ${authStore.token}`,
       },
-    });
-    totalProducts.value = response.data.totalProducts;
-    totalMessages.value = response.data.totalMessages;
-    latestProducts.value = response.data.latestProducts;
-    latestMessages.value = response.data.latestMessages;
+    })
+    totalProducts.value = response.data.totalProducts
+    totalMessages.value = response.data.totalMessages
+    latestProducts.value = response.data.latestProducts
+    latestMessages.value = response.data.latestMessages
   } catch (err: any) {
-    error.value = err.response?.data?.error || 'Failed to load admin dashboard data.';
-    console.error(err);
+    error.value = err.response?.data?.error || 'Failed to load admin dashboard data.'
+    console.error(err)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-});
+})
 
 watch(totalProducts, (newValue) => {
-  animateValue(0, newValue, 1000, (value) => (animatedTotalProducts.value = value));
-});
+  animateValue(0, newValue, 1000, (value) => (animatedTotalProducts.value = value))
+})
 
 watch(totalMessages, (newValue) => {
-  animateValue(0, newValue, 1000, (value) => (animatedTotalMessages.value = value));
-});
+  animateValue(0, newValue, 1000, (value) => (animatedTotalMessages.value = value))
+})
 </script>
 
 <template>
@@ -73,11 +91,19 @@ watch(totalMessages, (newValue) => {
     <h1 class="text-text-light text-4xl font-bold mb-8">Admin Dashboard</h1>
 
     <div v-if="loading" class="text-center py-10">
-      <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full" role="status">
+      <div
+        class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full"
+        role="status"
+      >
         <span class="visually-hidden">Loading...</span>
       </div>
     </div>
-    <div v-else-if="error" class="text-center py-10 text-primary-red bg-secondary-black p-4 rounded-lg">{{ error }}</div>
+    <div
+      v-else-if="error"
+      class="text-center py-10 text-primary-red bg-secondary-black p-4 rounded-lg"
+    >
+      {{ error }}
+    </div>
     <div v-else class="space-y-10">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- Total Products Card -->
@@ -86,7 +112,9 @@ watch(totalMessages, (newValue) => {
           style="animation-delay: 0.1s"
         >
           <h2 class="text-2xl font-semibold text-text-light">Total Products</h2>
-          <p class="text-5xl font-bold text-primary-red mt-2 animate-count-up">{{ animatedTotalProducts }}</p>
+          <p class="text-5xl font-bold text-primary-red mt-2 animate-count-up">
+            {{ animatedTotalProducts }}
+          </p>
         </div>
         <!-- Total Messages Card -->
         <div
@@ -94,7 +122,9 @@ watch(totalMessages, (newValue) => {
           style="animation-delay: 0.2s"
         >
           <h2 class="text-2xl font-semibold text-text-light">Total Messages</h2>
-          <p class="text-5xl font-bold text-primary-red mt-2 animate-count-up">{{ animatedTotalMessages }}</p>
+          <p class="text-5xl font-bold text-primary-red mt-2 animate-count-up">
+            {{ animatedTotalMessages }}
+          </p>
         </div>
       </div>
 
@@ -113,7 +143,9 @@ watch(totalMessages, (newValue) => {
               :style="{ 'animation-delay': `${0.4 + index * 0.1}s` }"
             >
               <span class="font-medium text-text-light">{{ product.name }}</span>
-              <span class="text-sm text-text-dark">{{ new Date(product.createdAt).toLocaleDateString() }}</span>
+              <span class="text-sm text-text-dark">{{
+                new Date(product.createdAt).toLocaleDateString()
+              }}</span>
             </li>
           </ul>
           <p v-else class="text-text-dark">No latest products.</p>
@@ -131,12 +163,45 @@ watch(totalMessages, (newValue) => {
               :key="message.id"
               class="border-b border-border-color pb-2 animate-fade-in-up"
               :style="{ 'animation-delay': `${0.5 + index * 0.1}s` }"
+              @click="openModal(message)"
             >
               <p class="font-medium text-text-light">{{ message.name }} ({{ message.email }})</p>
-              <p class="text-sm text-text-dark">{{ new Date(message.createdAt).toLocaleDateString() }}</p>
+              <p class="text-sm text-text-dark">
+                {{ new Date(message.createdAt).toLocaleDateString() }}
+              </p>
             </li>
           </ul>
           <p v-else class="text-text-dark">No latest messages.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- modal -->
+  <div
+    v-if="showModal"
+    class="fixed inset-0 flex items-center justify-center bg-gray-50 bg-opacity-60 z-50"
+  >
+    <div class="bg-secondary-black w-full max-w-lg p-6 rounded-xl shadow-lg relative">
+      <button class="absolute top-3 right-3 text-text-light hover:text-red-500" @click="closeModal">
+        ✕
+      </button>
+
+      <h2 class="text-xl font-semibold text-text-light mb-4">Message Detail</h2>
+
+      <div v-if="selectedMessage">
+        <p class="text-text-light font-medium">
+          {{ selectedMessage.name }}
+        </p>
+        <p class="text-sm text-text-dark mb-2">
+          {{ selectedMessage.email }}
+        </p>
+        <p class="text-sm text-text-dark mb-4">
+          {{ new Date(selectedMessage.createdAt).toLocaleString() }}
+        </p>
+
+        <div class="bg-white bg-opacity-30 border-2 p-4 rounded-lg text-text-light">
+          {{ selectedMessage.message }}
         </div>
       </div>
     </div>
