@@ -18,7 +18,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <footer class="bg-gray-800 text-white p-6 mt-12 shadow-inner border-t border-border-color">
+  <footer class="bg-red-600 text-white p-6 mt-12 shadow-inner border-t border-border-color">
     <div class="container mx-auto text-center">
       <p>&copy; {{ currentYear }} {{ companyName }}. All rights reserved.</p>
     </div>

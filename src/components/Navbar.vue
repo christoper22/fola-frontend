@@ -12,9 +12,9 @@ const toggleMenu = () => {
 </script>
 
 <template>
-  <nav class="bg-gray-800 p-4 shadow-lg border-b border-border-color" v-if="!authStore.isAdmin">
+  <nav class="bg-red-600 p-4 shadow-lg border-b border-border-color" v-if="!authStore.isAdmin">
     <div class="container mx-auto flex justify-between items-center">
-      <RouterLink to="/" class="text-white text-2xl font-bold">Fola Company</RouterLink>
+      <RouterLink to="/" class="text-white text-2xl font-bold">Fola Store</RouterLink>
       <div class="block lg:hidden">
         <button @click="toggleMenu" class="text-white focus:outline-none relative w-8 h-8">
           <span class="sr-only">Open main menu</span>
@@ -89,7 +89,7 @@ const toggleMenu = () => {
     >
       <div
         v-if="isOpen"
-        class="fixed inset-y-0 left-0 w-64 bg-gray-800 p-4 z-50 lg:hidden shadow-lg"
+        class="fixed inset-y-0 left-0 w-64 bg-red-600 p-4 z-50 lg:hidden shadow-lg"
       >
         <div class="flex justify-end mb-4">
           <button @click="toggleMenu" class="text-white focus:outline-none">

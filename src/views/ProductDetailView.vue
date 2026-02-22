@@ -105,7 +105,7 @@ onMounted(async () => {
             </p>
 
             <div class="flex items-baseline mb-8 animate-fade-in-up" style="animation-delay: 0.3s">
-              <span class="text-5xl md:text-6xl font-extrabold text-primary-red">{{
+              <span class="text-2xl md:text-5xl font-extrabold text-primary-red">{{
                 formatRupiah(product.price)
               }}</span>
             </div>
