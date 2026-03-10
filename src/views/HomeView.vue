@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import ProductCard from '@/components/ProductCard.vue'
 import { RouterLink } from 'vue-router' // Import RouterLink
+import { API_URL } from '@/config'
 
 interface Company {
   name: string
@@ -25,10 +26,10 @@ const loading = ref(true) // Add loading state
 
 onMounted(async () => {
   try {
-    const companyRes = await axios.get('http://localhost:5000/api/company')
+    const companyRes = await axios.get(`${API_URL}/api/company`)
     company.value = companyRes.data
 
-    const productsRes = await axios.get('http://localhost:5000/api/products/latest')
+    const productsRes = await axios.get(`${API_URL}/api/products/latest`)
     latestProducts.value = productsRes.data
   } catch (error) {
     console.error('Error fetching home data:', error)

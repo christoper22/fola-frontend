@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import { API_URL } from '@/config'
 
 interface Category {
   id: number
@@ -25,7 +26,7 @@ const deletingCategoryId = ref<number | null>(null)
 
 const fetchCategories = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/categories')
+    const response = await axios.get(`${API_URL}/api/categories`)
     categories.value = response.data
   } catch (err: any) {
     error.value = err.response?.data?.error || 'Failed to load categories.'
@@ -38,7 +39,7 @@ onMounted(fetchCategories)
 
 const addCategory = async () => {
   try {
-    await axios.post('http://localhost:5000/api/categories', newCategory.value, {
+    await axios.post(`${API_URL}/api/categories`, newCategory.value, {
       headers: { Authorization: `Bearer ${authStore.token}` },
     })
     showAddModal.value = false
@@ -57,7 +58,7 @@ const openEditModal = (category: Category) => {
 const updateCategory = async () => {
   if (!editingCategory.value) return
   try {
-    await axios.put(`http://localhost:5000/api/categories/${editingCategory.value.id}`, {
+    await axios.put(`${API_URL}/api/categories/${editingCategory.value.id}`, {
       name: editingCategory.value.name,
       description: editingCategory.value.description
     }, {
@@ -79,7 +80,7 @@ const openDeleteModal = (id: number) => {
 const deleteCategory = async () => {
   if (!deletingCategoryId.value) return
   try {
-    await axios.delete(`http://localhost:5000/api/categories/${deletingCategoryId.value}`, {
+    await axios.delete(`${API_URL}/api/categories/${deletingCategoryId.value}`, {
       headers: { Authorization: `Bearer ${authStore.token}` },
     })
     showDeleteModal.value = false
@@ -160,7 +161,7 @@ const deleteCategory = async () => {
 
     <!-- Edit Modal -->
     <div v-if="showEditModal && editingCategory" class="fixed inset-0 bg-primary-black bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-      <div class="bg-secondary-black p-8 rounded-lg shadow-xl w-full max-w-md">
+      <div class="bg-gray-300 p-8 rounded-lg shadow-xl w-full max-w-md">
         <h2 class="text-2xl font-bold text-text-light mb-4">Edit Category</h2>
         <form @submit.prevent="updateCategory" class="space-y-4">
           <div>

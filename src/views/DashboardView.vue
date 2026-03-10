@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 import ProductCard from '@/components/ProductCard.vue';
+import { API_URL } from '@/config';
 
 interface Product {
   id: number;
@@ -35,7 +36,7 @@ const animateValue = (start: number, end: number, duration: number, callback: (v
 
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/dashboard/public');
+    const response = await axios.get(`${API_URL}/api/dashboard/public`);
     totalProducts.value = response.data.totalProducts;
     visitorCount.value = response.data.visitorCount;
     latestProducts.value = response.data.latestProducts;

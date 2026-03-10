@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import { API_URL } from '@/config'
 
 interface Product {
   id: number
@@ -13,6 +14,7 @@ interface Message {
   id: number
   name: string
   email: string
+  message: string
   createdAt: string
 }
 
@@ -27,10 +29,10 @@ const error = ref<string | null>(null)
 const animatedTotalProducts = ref(0)
 const animatedTotalMessages = ref(0)
 
-const selectedMessage = ref(null)
+const selectedMessage = ref<Message | null>(null)
 const showModal = ref(false)
 
-const openModal = (message) => {
+const openModal = (message: Message) => {
   selectedMessage.value = message
   showModal.value = true
 }
@@ -60,7 +62,7 @@ const animateValue = (
 
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/dashboard/admin', {
+    const response = await axios.get(`${API_URL}/api/dashboard/admin`, {
       headers: {
         Authorization: `Bearer ${authStore.token}`,
       },

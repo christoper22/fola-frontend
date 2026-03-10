@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { formatRupiah } from '@/utils/format'
+import { API_URL } from '@/config'
 
 interface Category {
   id: number
@@ -33,7 +34,7 @@ const error = ref<string | null>(null)
 onMounted(async () => {
   try {
     const productId = route.params.id
-    const response = await axios.get(`http://localhost:5000/api/products/${productId}`)
+    const response = await axios.get(`${API_URL}/api/products/${productId}`)
     product.value = response.data
   } catch (err) {
     error.value = 'Failed to load product details.'

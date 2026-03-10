@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import ProductCard from '@/components/ProductCard.vue'
 import { useRoute, useRouter } from 'vue-router'
+import { API_URL } from '@/config'
 
 interface Product {
   id: number
@@ -26,7 +27,7 @@ const fetchProducts = async (page: number, search: string = '') => {
   loading.value = true // Set loading to true before fetching
   try {
     const response = await axios.get(
-      `http://localhost:5000/api/products?page=${page}&limit=9&name=${search}`,
+      `${API_URL}/api/products?page=${page}&limit=9&name=${search}`,
     )
     products.value = response.data.products
     currentPage.value = response.data.currentPage

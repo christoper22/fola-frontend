@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
+import { API_URL } from '@/config';
 
 interface AuthState {
   token: string | null;
@@ -24,7 +25,7 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true;
       this.error = null;
       try {
-        const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+        const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
         this.token = response.data.token;
         localStorage.setItem('token', this.token as string);
         // Decode token to get user info (for simplicity, in a real app, you might fetch user profile)

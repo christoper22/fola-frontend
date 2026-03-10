@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { formatRupiah } from '@/utils/format'
+import { API_URL } from '@/config'
 
 interface Category {
   id: number
@@ -57,8 +58,8 @@ const deletingProductId = ref<number | null>(null)
 const fetchData = async () => {
   try {
     const [productsRes, categoriesRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/products'),
-        axios.get('http://localhost:5000/api/categories')
+        axios.get(`${API_URL}/api/products`),
+        axios.get(`${API_URL}/api/categories`)
     ])
     products.value = productsRes.data.products
     categories.value = categoriesRes.data
@@ -76,7 +77,7 @@ const handleImageUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files.length > 0) {
     if (showAddModal.value) {
-      newProduct.value.image = target.files[0]
+      newProduct.value.image = target.files[0] as File
     } else if (showEditModal.value && editingProduct.value) {
       editingProduct.value.image = target.files[0] as any // Cast to any for now
     }
@@ -103,7 +104,7 @@ const addProduct = async () => {
       formData.append('link', newProduct.value.link)
     }
 
-    await axios.post('http://localhost:5000/api/products', formData, {
+    await axios.post(`${API_URL}/api/products`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${authStore.token}`,
@@ -143,7 +144,7 @@ const updateProduct = async () => {
       formData.append('link', editingProduct.value.link)
     }
 
-    await axios.put(`http://localhost:5000/api/products/${editingProduct.value.id}`, formData, {
+    await axios.put(`${API_URL}/api/products/${editingProduct.value.id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${authStore.token}`,
@@ -167,7 +168,7 @@ const deleteProduct = async () => {
   if (!deletingProductId.value) return
 
   try {
-    await axios.delete(`http://localhost:5000/api/products/${deletingProductId.value}`, {
+    await axios.delete(`${API_URL}/api/products/${deletingProductId.value}`, {
       headers: {
         Authorization: `Bearer ${authStore.token}`,
       },
@@ -356,7 +357,7 @@ const deleteProduct = async () => {
       v-if="showEditModal && editingProduct"
       class="fixed inset-0 bg-primary-black bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center z-50"
     >
-      <div class="bg-secondary-black p-8 rounded-lg shadow-xl w-full max-w-md">
+      <div class="bg-gray-300 p-8 rounded-lg shadow-xl w-full max-w-md">
         <h2 class="text-2xl font-bold text-text-light mb-4">Edit Product</h2>
         <form @submit.prevent="updateProduct" class="space-y-4">
           <div>

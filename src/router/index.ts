@@ -70,11 +70,6 @@ const router = createRouter({
           name: 'admin-categories',
           component: () => import('../views/admin/AdminManageCategoriesView.vue'),
         },
-        {
-          path: 'sizes',
-          name: 'admin-sizes',
-          component: () => import('../views/admin/AdminManageSizesView.vue'),
-        },
       ],
     },
   ],

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import { API_URL } from '@/config';
 
 interface Company {
   address?: string;
@@ -18,7 +19,7 @@ const loading = ref(false);
 
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/company');
+    const response = await axios.get(`${API_URL}/api/company`);
     company.value = response.data;
   } catch (error) {
     console.error('Error fetching company contact info:', error);
@@ -31,7 +32,7 @@ const submitForm = async () => {
   errorMessage.value = null;
 
   try {
-    await axios.post('http://localhost:5000/api/messages', {
+    await axios.post(`${API_URL}/api/messages`, {
       name: name.value,
       email: email.value,
       message: message.value,

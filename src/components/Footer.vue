@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { API_URL } from '@/config'
 
 const companyName = ref('Fola Company')
 const currentYear = ref(new Date().getFullYear())
 
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/company')
+    const response = await axios.get(`${API_URL}/api/company`)
     if (response.data && response.data.name) {
       companyName.value = response.data.name
     }

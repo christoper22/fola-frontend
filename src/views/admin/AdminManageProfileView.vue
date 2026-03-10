@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import { API_URL } from '@/config'
 
 interface Company {
   name: string
@@ -29,7 +30,7 @@ const errorMessage = ref<string | null>(null)
 
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/company')
+    const response = await axios.get(`${API_URL}/api/company`)
     if (response.data) {
       company.value = response.data
     }
@@ -44,7 +45,7 @@ onMounted(async () => {
 const handleLogoUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files.length > 0) {
-    newLogo.value = target.files[0]
+    newLogo.value = target.files[0] as File
   }
 }
 
@@ -64,7 +65,7 @@ const updateProfile = async () => {
       formData.append('logo', newLogo.value)
     }
 
-    const response = await axios.put('http://localhost:5000/api/company', formData, {
+    const response = await axios.put(`${API_URL}/api/company`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${authStore.token}`,
