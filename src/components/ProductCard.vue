@@ -2,6 +2,16 @@
 import { formatRupiah } from '@/utils/format'
 import { RouterLink } from 'vue-router'
 
+interface Category {
+  id: number
+  name: string
+}
+
+interface Size {
+  id: number
+  name: string
+}
+
 interface Product {
   id: number
   name: string
@@ -9,6 +19,8 @@ interface Product {
   price: number
   image: string
   link?: string // Add link field
+  category?: Category
+  sizes?: Size[]
 }
 
 const props = defineProps<{
@@ -38,12 +50,18 @@ const truncateDescription = (description: string, length: number) => {
           <span class="text-primary-red text-lg font-bold">View Details</span>
         </div>
       </div>
-      <div class="p-4">
-        <h3 class="text-text-light text-xl font-semibold mb-2">{{ product.name }}</h3>
-        <p class="text-text-dark text-sm mb-3">
+      <div class="p-4 flex flex-col h-full">
+        <div class="flex justify-between items-start mb-1">
+            <h3 class="text-text-light text-xl font-semibold">{{ product.name }}</h3>
+            <span class="text-xs bg-gray-600 text-white px-2 py-1 rounded">{{ product.category?.name || 'Uncategorized' }}</span>
+        </div>
+        <div v-if="product.sizes && product.sizes.length > 0" class="flex flex-wrap gap-1 mb-2">
+            <span v-for="size in product.sizes" :key="size.id" class="text-[10px] bg-primary-black border border-border-color text-text-dark px-1.5 py-0.5 rounded">{{ size.name }}</span>
+        </div>
+        <p class="text-text-dark text-sm mb-3 mt-1 flex-grow">
           {{ truncateDescription(product.description, 100) }}
         </p>
-        <div class="flex justify-between items-center mt-4">
+        <div class="flex justify-between items-center mt-auto pt-2 border-t border-border-color/30">
           <span class="text-primary-red text-2xl font-bold">{{ formatRupiah(product.price) }}</span>
         </div>
       </div>

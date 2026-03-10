@@ -63,7 +63,17 @@ const router = createRouter({
         {
           path: 'products',
           name: 'admin-products',
-          component: AdminManageProductsView,
+          component: () => import('../views/admin/AdminManageProductsView.vue'),
+        },
+        {
+          path: 'categories',
+          name: 'admin-categories',
+          component: () => import('../views/admin/AdminManageCategoriesView.vue'),
+        },
+        {
+          path: 'sizes',
+          name: 'admin-sizes',
+          component: () => import('../views/admin/AdminManageSizesView.vue'),
         },
       ],
     },

@@ -4,6 +4,17 @@ import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { formatRupiah } from '@/utils/format'
 
+interface Category {
+  id: number
+  name: string
+}
+
+interface Size {
+  id: number
+  name: string
+  productId: number
+}
+
 interface Product {
   id: number
   name: string
@@ -11,11 +22,15 @@ interface Product {
   price: number
   image: string
   link?: string // Add link field
+  categoryId: number
+  category?: Category
+  sizes?: Size[]
   createdAt: string
 }
 
 const authStore = useAuthStore()
 const products = ref<Product[]>([])
+const categories = ref<Category[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 
@@ -29,23 +44,33 @@ const newProduct = ref({
   price: 0,
   image: null as File | null,
   link: '', // Add link field
+  categoryId: '',
+  sizes: ''
 })
+
+// Specifically storing what sizes the editingProduct has currently selected
 const editingProduct = ref<Product | null>(null)
+const editingProductSizes = ref<string>('')
+
 const deletingProductId = ref<number | null>(null)
 
-const fetchProducts = async () => {
+const fetchData = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/products')
-    products.value = response.data.products
+    const [productsRes, categoriesRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/products'),
+        axios.get('http://localhost:5000/api/categories')
+    ])
+    products.value = productsRes.data.products
+    categories.value = categoriesRes.data
   } catch (err: any) {
-    error.value = err.response?.data?.error || 'Failed to load products.'
+    error.value = err.response?.data?.error || 'Failed to load data.'
     console.error(err)
   } finally {
     loading.value = false
   }
 }
 
-onMounted(fetchProducts)
+onMounted(fetchData)
 
 const handleImageUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -64,6 +89,13 @@ const addProduct = async () => {
     formData.append('name', newProduct.value.name)
     formData.append('description', newProduct.value.description)
     formData.append('price', newProduct.value.price.toString())
+    formData.append('categoryId', newProduct.value.categoryId.toString())
+    
+    // Append sizes string
+    if (newProduct.value.sizes.trim() !== '') {
+        formData.append('sizes', newProduct.value.sizes)
+    }
+
     if (newProduct.value.image) {
       formData.append('image', newProduct.value.image)
     }
@@ -78,8 +110,8 @@ const addProduct = async () => {
       },
     })
     showAddModal.value = false
-    newProduct.value = { name: '', description: '', price: 0, image: null }
-    fetchProducts()
+    newProduct.value = { name: '', description: '', price: 0, image: null, link: '', categoryId: '', sizes: '' }
+    fetchData()
   } catch (err: any) {
     error.value = err.response?.data?.error || 'Failed to add product.'
     console.error(err)
@@ -88,6 +120,7 @@ const addProduct = async () => {
 
 const openEditModal = (product: Product) => {
   editingProduct.value = { ...product } // Create a copy to avoid direct mutation
+  editingProductSizes.value = product.sizes ? product.sizes.map(s => s.name).join(', ') : ''
   showEditModal.value = true
 }
 
@@ -99,6 +132,10 @@ const updateProduct = async () => {
     formData.append('name', editingProduct.value.name)
     formData.append('description', editingProduct.value.description)
     formData.append('price', editingProduct.value.price.toString())
+    formData.append('categoryId', editingProduct.value.categoryId.toString())
+    
+    formData.append('sizes', editingProductSizes.value)
+
     if (editingProduct.value.image && typeof editingProduct.value.image !== 'string') {
       formData.append('image', editingProduct.value.image)
     }
@@ -114,7 +151,7 @@ const updateProduct = async () => {
     })
     showEditModal.value = false
     editingProduct.value = null
-    fetchProducts()
+    fetchData()
   } catch (err: any) {
     error.value = err.response?.data?.error || 'Failed to update product.'
     console.error(err)
@@ -137,7 +174,7 @@ const deleteProduct = async () => {
     })
     showDeleteModal.value = false
     deletingProductId.value = null
-    fetchProducts()
+    fetchData()
   } catch (err: any) {
     error.value = err.response?.data?.error || 'Failed to delete product.'
     console.error(err)
@@ -172,6 +209,8 @@ const deleteProduct = async () => {
                 Image
               </th>
               <th class="py-3 px-4 border-b border-border-color text-left text-text-light">Name</th>
+              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">Category</th>
+              <th class="py-3 px-4 border-b border-border-color text-left text-text-light">Sizes</th>
               <th class="py-3 px-4 border-b border-border-color text-left text-text-light">
                 Price
               </th>
@@ -195,6 +234,12 @@ const deleteProduct = async () => {
               </td>
               <td class="py-2 px-4 border-b border-border-color text-text-dark">
                 {{ product.name }}
+              </td>
+              <td class="py-2 px-4 border-b border-border-color text-text-dark">
+                {{ product.category?.name || 'Uncategorized' }}
+              </td>
+              <td class="py-2 px-4 border-b border-border-color text-text-dark">
+                {{ product.sizes && product.sizes.length > 0 ? product.sizes.map(s => s.name).join(', ') : '-' }}
               </td>
               <td class="py-2 px-4 border-b border-border-color text-primary-red">
                 {{ formatRupiah(product.price) }}
@@ -253,30 +298,28 @@ const deleteProduct = async () => {
             ></textarea>
           </div>
           <div>
-            <label for="newProductPrice" class="block text-text-dark text-sm font-bold mb-2"
-              >Price:</label
-            >
-            <input
-              type="number"
-              id="newProductPrice"
-              v-model.number="newProduct.price"
-              class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline"
-              step="0.01"
-              required
-            />
+            <label for="newProductPrice" class="block text-text-dark text-sm font-bold mb-2">Price:</label>
+            <input type="number" id="newProductPrice" v-model.number="newProduct.price" class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline" step="0.01" required />
           </div>
+
+          <!-- New Category Field -->
           <div>
-            <label for="newProductImage" class="block text-text-dark text-sm font-bold mb-2"
-              >Image:</label
-            >
-            <input
-              type="file"
-              id="newProductImage"
-              @change="handleImageUpload"
-              accept="image/*"
-              class="block w-full text-sm text-text-dark"
-              required
-            />
+            <label for="newProductCategory" class="block text-text-dark text-sm font-bold mb-2">Category:</label>
+            <select id="newProductCategory" v-model="newProduct.categoryId" class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline" required>
+              <option value="" disabled>Select a category</option>
+              <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
+            </select>
+          </div>
+
+          <!-- New Sizes Field (text input) -->
+          <div>
+            <label for="newProductSizes" class="block text-text-dark text-sm font-bold mb-2">Sizes (Optional, comma-separated):</label>
+            <input type="text" id="newProductSizes" v-model="newProduct.sizes" placeholder="e.g. S, M, L, XL" class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline" />
+          </div>
+
+          <div>
+            <label for="newProductImage" class="block text-text-dark text-sm font-bold mb-2">Image:</label>
+            <input type="file" id="newProductImage" @change="handleImageUpload" accept="image/*" class="block w-full text-sm text-text-dark" required />
           </div>
           <div>
             <label for="newProductLink" class="block text-text-dark text-sm font-bold mb-2"
@@ -341,29 +384,28 @@ const deleteProduct = async () => {
             ></textarea>
           </div>
           <div>
-            <label for="editProductPrice" class="block text-text-dark text-sm font-bold mb-2"
-              >Price:</label
-            >
-            <input
-              type="number"
-              id="editProductPrice"
-              v-model.number="editingProduct.price"
-              class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline"
-              step="0.01"
-              required
-            />
+            <label for="editProductPrice" class="block text-text-dark text-sm font-bold mb-2">Price:</label>
+            <input type="number" id="editProductPrice" v-model.number="editingProduct.price" class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline" step="0.01" required />
           </div>
+
+          <!-- Edit Category Field -->
           <div>
-            <label for="editProductImage" class="block text-text-dark text-sm font-bold mb-2"
-              >Image:</label
-            >
-            <input
-              type="file"
-              id="editProductImage"
-              @change="handleImageUpload"
-              accept="image/*"
-              class="block w-full text-sm text-text-dark"
-            />
+            <label for="editProductCategory" class="block text-text-dark text-sm font-bold mb-2">Category:</label>
+            <select id="editProductCategory" v-model="editingProduct.categoryId" class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline" required>
+              <option value="" disabled>Select a category</option>
+              <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option>
+            </select>
+          </div>
+
+          <!-- Edit Sizes Field (text input) -->
+          <div>
+            <label for="editProductSizes" class="block text-text-dark text-sm font-bold mb-2">Sizes (Optional, comma-separated):</label>
+            <input type="text" id="editProductSizes" v-model="editingProductSizes" placeholder="e.g. S, M, L, XL" class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black focus:outline-none focus:shadow-outline" />
+          </div>
+
+          <div>
+            <label for="editProductImage" class="block text-text-dark text-sm font-bold mb-2">Image:</label>
+            <input type="file" id="editProductImage" @change="handleImageUpload" accept="image/*" class="block w-full text-sm text-text-dark" />
             <div
               v-if="editingProduct.image && typeof editingProduct.image === 'string'"
               class="mt-2"

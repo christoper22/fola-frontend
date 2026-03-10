@@ -4,6 +4,16 @@ import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { formatRupiah } from '@/utils/format'
 
+interface Category {
+  id: number
+  name: string
+}
+
+interface Size {
+  id: number
+  name: string
+}
+
 interface Product {
   id: number
   name: string
@@ -11,6 +21,8 @@ interface Product {
   price: number
   image: string
   link?: string // Add link field
+  category?: Category
+  sizes?: Size[]
 }
 
 const route = useRoute()
@@ -51,7 +63,7 @@ onMounted(async () => {
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            d="M10 19l-7-7m0 0ll7 7m-7 7h18"
           ></path>
         </svg>
         Back to Products
@@ -91,25 +103,38 @@ onMounted(async () => {
         <!-- Product Details -->
         <div class="lg:col-span-1 flex flex-col justify-between">
           <div>
+            <div class="flex items-center space-x-3 mb-2 animate-fade-in-up" style="animation-delay: 0.1s">
+                <span class="text-sm bg-gray-600 font-medium text-white px-3 py-1 rounded-full uppercase tracking-wider">{{ product.category?.name || 'Uncategorized' }}</span>
+            </div>
+
             <h1
-              class="text-4xl md:text-5xl font-extrabold text-text-light mb-3 leading-tight animate-fade-in-up"
-              style="animation-delay: 0.1s"
+              class="text-4xl md:text-5xl font-extrabold text-text-light mb-4 leading-tight animate-fade-in-up"
+              style="animation-delay: 0.2s"
             >
               {{ product.name }}
             </h1>
+
+            <div v-if="product.sizes && product.sizes.length > 0" class="mb-6 animate-fade-in-up" style="animation-delay: 0.3s">
+                <h3 class="text-text-light text-sm font-bold mb-2 uppercase tracking-wide">Available Sizes</h3>
+                <div class="flex flex-wrap gap-2">
+                    <span v-for="size in product.sizes" :key="size.id" class="text-sm bg-primary-black border border-border-color text-text-dark px-3 py-1 rounded shadow-sm">{{ size.name }}</span>
+                </div>
+            </div>
+
             <p
               class="text-text-dark text-lg leading-relaxed mb-6 animate-fade-in-up"
-              style="animation-delay: 0.2s"
+              style="animation-delay: 0.4s"
             >
               {{ product.description }}
             </p>
 
-            <div class="flex items-baseline mb-8 animate-fade-in-up" style="animation-delay: 0.3s">
+            <div class="flex items-baseline mb-8 animate-fade-in-up" style="animation-delay: 0.5s">
               <span class="text-2xl md:text-5xl font-extrabold text-primary-red">{{
                 formatRupiah(product.price)
               }}</span>
             </div>
           </div>
+
 
           <!-- Action Buttons -->
           <div
