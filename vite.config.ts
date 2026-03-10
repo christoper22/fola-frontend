@@ -15,9 +15,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/uploads': {
-        target: 'http://localhost:5000',
+        target: 'fola_be.db22.asia',
         changeOrigin: true,
       },
     },
+    allowedHosts: ['fola.db22.asia']
   },
 })
