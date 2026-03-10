@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { formatRupiah } from '@/utils/format'
 import { RouterLink } from 'vue-router'
+import { API_URL } from '@/config'
 
 interface Category {
   id: number
@@ -40,7 +41,8 @@ const truncateDescription = (description: string, length: number) => {
       <!-- Added group class -->
       <div class="relative overflow-hidden">
         <img
-          :src="`${product.image}`"
+          v-if="product.image"
+          :src="`${API_URL}${product.image}`"
           :alt="product.name"
           class="w-full h-48 object-cover transition-transform duration-300 ease-in-out hover:scale-110"
         />

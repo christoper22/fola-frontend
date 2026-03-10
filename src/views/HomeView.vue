@@ -56,7 +56,7 @@ onMounted(async () => {
       <div class="relative z-10 container mx-auto animate-fade-in-up" style="animation-delay: 0.1s">
         <img
           v-if="company?.logo"
-          :src="`${company.logo}`"
+          :src="`${API_URL}${company.logo}`"
           :alt="company.name"
           class="mx-auto h-24 w-24 object-contain mb-4 rounded-full shadow-lg"
         />

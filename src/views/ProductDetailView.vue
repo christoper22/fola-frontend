@@ -95,7 +95,8 @@ onMounted(async () => {
           class="lg:col-span-1 flex justify-center items-center p-4 bg-primary-black rounded-lg shadow-inner border border-border-color mb-6 lg:mb-0"
         >
           <img
-            :src="`${product.image}`"
+            v-if="product.image"
+            :src="`${API_URL}${product.image}`"
             :alt="product.name"
             class="max-w-full h-auto object-contain rounded-lg transform transition-transform duration-500 hover:scale-105"
           />

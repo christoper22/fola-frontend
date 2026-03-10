@@ -228,7 +228,8 @@ const deleteProduct = async () => {
             >
               <td class="py-2 px-4 border-b border-border-color">
                 <img
-                  :src="`${product.image}`"
+                  v-if="product.image"
+                  :src="`${API_URL}${product.image}`"
                   :alt="product.name"
                   class="w-16 h-16 object-cover rounded"
                 />
@@ -413,7 +414,8 @@ const deleteProduct = async () => {
             >
               <p class="text-text-dark">Current Image:</p>
               <img
-                :src="`${editingProduct.image}`"
+                v-if="editingProduct.image"
+                :src="`${API_URL}${editingProduct.image}`"
                 :alt="editingProduct.name"
                 class="w-24 h-24 object-cover rounded mt-1"
               />
