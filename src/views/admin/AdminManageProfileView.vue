@@ -153,7 +153,7 @@ const updateProfile = async () => {
           <div v-if="company.logo" class="mt-4">
             <p class="text-text-dark">Current Logo:</p>
             <img
-              :src="`${company.logo}`"
+              :src="`${API_URL}${company.logo}`"
               :alt="company.name"
               class="h-24 w-24 object-contain mt-2 border border-border-color rounded p-1"
             />
