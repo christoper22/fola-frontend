@@ -4,6 +4,8 @@ import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { formatRupiah } from '@/utils/format'
 import { API_URL } from '@/config'
+import { useCartStore } from '@/stores/cart'
+import Swal from 'sweetalert2'
 
 interface Category {
   id: number
@@ -30,12 +32,17 @@ const route = useRoute()
 const product = ref<Product | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
+const selectedSize = ref<string | null>(null)
+const cartStore = useCartStore()
 
 onMounted(async () => {
   try {
     const productId = route.params.id
     const response = await axios.get(`${API_URL}/api/products/${productId}`)
     product.value = response.data
+    if (product.value?.sizes && product.value.sizes.length > 0) {
+      selectedSize.value = product.value.sizes[0].name
+    }
   } catch (err) {
     error.value = 'Failed to load product details.'
     console.error(err)
@@ -43,6 +50,33 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+const addToCart = () => {
+  if (product.value && selectedSize.value) {
+    cartStore.addItem(
+      {
+        id: product.value.id,
+        name: product.value.name,
+        price: product.value.price,
+        image: product.value.image,
+      },
+      selectedSize.value,
+    )
+    Swal.fire({
+      title: 'Success!',
+      text: `${product.value.name} has been added to your cart.`,
+      icon: 'success',
+      confirmButtonText: 'OK'
+    })
+  } else {
+    Swal.fire({
+      title: 'Error!',
+      text: 'Please select a size.',
+      icon: 'error',
+      confirmButtonText: 'OK'
+    })
+  }
+}
 </script>
 
 <template>
@@ -117,9 +151,21 @@ onMounted(async () => {
             </h1>
 
             <div v-if="product.sizes && product.sizes.length > 0" class="mb-6 animate-fade-in-up" style="animation-delay: 0.3s">
-                <h3 class="text-text-light text-sm font-bold mb-2 uppercase tracking-wide">Available Sizes</h3>
+                <h3 class="text-text-light text-sm font-bold mb-2 uppercase tracking-wide">Select Size</h3>
                 <div class="flex flex-wrap gap-2">
-                    <span v-for="size in product.sizes" :key="size.id" class="text-sm bg-primary-black border border-border-color text-text-dark px-3 py-1 rounded shadow-sm">{{ size.name }}</span>
+                    <button
+                        v-for="size in product.sizes"
+                        :key="size.id"
+                        @click="selectedSize = size.name"
+                        :class="[
+                            'border border-border-color px-4 py-2 rounded shadow-sm transition-colors duration-200',
+                            selectedSize === size.name
+                                ? 'bg-primary-red text-orange-400'
+                                : 'bg-primary-black text-text-dark hover:bg-gray-700'
+                        ]"
+                    >
+                        {{ size.name }}
+                    </button>
                 </div>
             </div>
 
@@ -143,6 +189,12 @@ onMounted(async () => {
             class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mt-auto animate-fade-in-up"
             style="animation-delay: 0.4s"
           >
+            <button
+                @click="addToCart"
+                class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full transition duration-300 ease-in-out transform hover:scale-105 text-center shadow-lg w-full"
+            >
+                Add to Cart
+            </button>
             <a
               v-if="product.link"
               :href="product.link"

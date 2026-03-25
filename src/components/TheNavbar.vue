@@ -2,8 +2,10 @@
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useCartStore } from '@/stores/cart'
 
 const authStore = useAuthStore()
+const cartStore = useCartStore()
 const isOpen = ref(false)
 
 const toggleMenu = () => {

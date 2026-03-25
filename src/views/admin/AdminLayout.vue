@@ -49,6 +49,14 @@ const logoutAdmin = () => {
           </li>
           <li class="mb-3">
             <RouterLink
+              to="/admin/stores"
+              class="block py-2 px-4 rounded-lg hover:bg-secondary-red hover:text-text-light transition duration-200 transform hover:scale-105"
+              active-class="bg-primary-red text-text-light shadow-md"
+              >Manage Stores</RouterLink
+            >
+          </li>
+          <li class="mb-3">
+            <RouterLink
               to="/admin/profile"
               class="block py-2 px-4 rounded-lg hover:bg-secondary-red hover:text-text-light transition duration-200 transform hover:scale-105"
               active-class="bg-primary-red text-text-light shadow-md"

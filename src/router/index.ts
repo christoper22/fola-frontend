@@ -7,7 +7,6 @@ import ContactView from '../views/ContactView.vue'
 import AdminLoginView from '../views/admin/AdminLoginView.vue'
 import AdminDashboardView from '../views/admin/AdminDashboardView.vue'
 import AdminManageProfileView from '../views/admin/AdminManageProfileView.vue'
-import AdminManageProductsView from '../views/admin/AdminManageProductsView.vue'
 import AdminLayout from '../views/admin/AdminLayout.vue' // Import AdminLayout
 import { useAuthStore } from '@/stores/auth'
 
@@ -40,6 +39,11 @@ const router = createRouter({
       component: ContactView,
     },
     {
+      path: '/cart',
+      name: 'cart',
+      component: () => import('../views/CartView.vue'),
+    },
+    {
       path: '/admin/login',
       name: 'admin-login',
       component: AdminLoginView,
@@ -69,6 +73,11 @@ const router = createRouter({
           path: 'categories',
           name: 'admin-categories',
           component: () => import('../views/admin/AdminManageCategoriesView.vue'),
+        },
+        {
+          path: 'stores',
+          name: 'admin-stores',
+          component: () => import('../views/admin/AdminManageStoresView.vue'),
         },
       ],
     },

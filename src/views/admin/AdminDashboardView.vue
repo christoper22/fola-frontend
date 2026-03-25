@@ -71,8 +71,12 @@ onMounted(async () => {
     totalMessages.value = response.data.totalMessages
     latestProducts.value = response.data.latestProducts
     latestMessages.value = response.data.latestMessages
-  } catch (err: any) {
-    error.value = err.response?.data?.error || 'Failed to load admin dashboard data.'
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      error.value = err.response?.data?.error || 'Failed to load admin dashboard data.'
+    } else {
+      error.value = 'An unexpected error occurred.'
+    }
     console.error(err)
   } finally {
     loading.value = false

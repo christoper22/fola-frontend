@@ -32,7 +32,7 @@ const fetchProducts = async (page: number, search: string = '') => {
     products.value = response.data.products
     currentPage.value = response.data.currentPage
     totalPages.value = response.data.totalPages
-  } catch (error) {
+  } catch {
     products.value = []
     currentPage.value = 0
     totalPages.value = 0

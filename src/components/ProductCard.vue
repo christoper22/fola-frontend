@@ -24,7 +24,7 @@ interface Product {
   sizes?: Size[]
 }
 
-const props = defineProps<{
+defineProps<{
   product: Product
 }>()
 

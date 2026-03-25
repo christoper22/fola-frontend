@@ -21,7 +21,7 @@ interface Product {
   name: string
   description: string
   price: number
-  image: string
+  image: string | File
   link?: string // Add link field
   categoryId: number
   category?: Category
@@ -63,8 +63,12 @@ const fetchData = async () => {
     ])
     products.value = productsRes.data.products
     categories.value = categoriesRes.data
-  } catch (err: any) {
-    error.value = err.response?.data?.error || 'Failed to load data.'
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      error.value = err.response?.data?.error || 'Failed to load data.'
+    } else {
+      error.value = 'An unexpected error occurred.'
+    }
     console.error(err)
   } finally {
     loading.value = false
@@ -76,10 +80,13 @@ onMounted(fetchData)
 const handleImageUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
   if (target.files && target.files.length > 0) {
-    if (showAddModal.value) {
-      newProduct.value.image = target.files[0] as File
-    } else if (showEditModal.value && editingProduct.value) {
-      editingProduct.value.image = target.files[0] as any // Cast to any for now
+    const file = target.files[0];
+    if (file) {
+      if (showAddModal.value) {
+        newProduct.value.image = file
+      } else if (showEditModal.value && editingProduct.value) {
+        editingProduct.value.image = file
+      }
     }
   }
 }
@@ -113,8 +120,12 @@ const addProduct = async () => {
     showAddModal.value = false
     newProduct.value = { name: '', description: '', price: 0, image: null, link: '', categoryId: '', sizes: '' }
     fetchData()
-  } catch (err: any) {
-    error.value = err.response?.data?.error || 'Failed to add product.'
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      error.value = err.response?.data?.error || 'Failed to add product.'
+    } else {
+      error.value = 'An unexpected error occurred.'
+    }
     console.error(err)
   }
 }
@@ -153,8 +164,12 @@ const updateProduct = async () => {
     showEditModal.value = false
     editingProduct.value = null
     fetchData()
-  } catch (err: any) {
-    error.value = err.response?.data?.error || 'Failed to update product.'
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      error.value = err.response?.data?.error || 'Failed to update product.'
+    } else {
+      error.value = 'An unexpected error occurred.'
+    }
     console.error(err)
   }
 }
@@ -176,8 +191,12 @@ const deleteProduct = async () => {
     showDeleteModal.value = false
     deletingProductId.value = null
     fetchData()
-  } catch (err: any) {
-    error.value = err.response?.data?.error || 'Failed to delete product.'
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      error.value = err.response?.data?.error || 'Failed to delete product.'
+    } else {
+      error.value = 'An unexpected error occurred.'
+    }
     console.error(err)
   }
 }

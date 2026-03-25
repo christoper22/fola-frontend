@@ -28,8 +28,12 @@ const fetchCategories = async () => {
   try {
     const response = await axios.get(`${API_URL}/api/categories`)
     categories.value = response.data
-  } catch (err: any) {
-    error.value = err.response?.data?.error || 'Failed to load categories.'
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      error.value = err.response?.data?.error || 'Failed to load categories.'
+    } else {
+      error.value = 'An unexpected error occurred.'
+    }
   } finally {
     loading.value = false
   }
@@ -45,8 +49,12 @@ const addCategory = async () => {
     showAddModal.value = false
     newCategory.value = { name: '', description: '' }
     fetchCategories()
-  } catch (err: any) {
-    alert(err.response?.data?.error || 'Failed to add category.')
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      alert(err.response?.data?.error || 'Failed to add category.')
+    } else {
+      alert('An unexpected error occurred.')
+    }
   }
 }
 
@@ -67,8 +75,12 @@ const updateCategory = async () => {
     showEditModal.value = false
     editingCategory.value = null
     fetchCategories()
-  } catch (err: any) {
-    alert(err.response?.data?.error || 'Failed to update category.')
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      alert(err.response?.data?.error || 'Failed to update category.')
+    } else {
+      alert('An unexpected error occurred.')
+    }
   }
 }
 
@@ -86,8 +98,12 @@ const deleteCategory = async () => {
     showDeleteModal.value = false
     deletingCategoryId.value = null
     fetchCategories()
-  } catch (err: any) {
-    alert(err.response?.data?.error || 'Failed to delete category.')
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      alert(err.response?.data?.error || 'Failed to delete category.')
+    } else {
+      alert('An unexpected error occurred.')
+    }
   }
 }
 </script>

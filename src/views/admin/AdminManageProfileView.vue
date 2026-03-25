@@ -1,20 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { API_URL } from '@/config'
-
-interface Company {
-  name: string
-  description: string
-  address: string
-  phone: string
-  email: string
-  logo?: string
-}
+import { useCompanyStore } from '@/stores/company'
+import { storeToRefs } from 'pinia'
 
 const authStore = useAuthStore()
-const company = ref<Company>({
+const companyStore = useCompanyStore()
+const { company, loading, error: errorMessage } = storeToRefs(companyStore)
+
+const localCompany = ref({
   name: '',
   description: '',
   address: '',
@@ -22,25 +18,17 @@ const company = ref<Company>({
   email: '',
   logo: '',
 })
+
+watch(company, (newCompany) => {
+  if (newCompany) {
+    localCompany.value = { ...newCompany }
+  }
+}, { immediate: true })
+
+
 const newLogo = ref<File | null>(null)
-const loading = ref(true)
 const submitting = ref(false)
 const successMessage = ref<string | null>(null)
-const errorMessage = ref<string | null>(null)
-
-onMounted(async () => {
-  try {
-    const response = await axios.get(`${API_URL}/api/company`)
-    if (response.data) {
-      company.value = response.data
-    }
-  } catch (err: any) {
-    errorMessage.value = err.response?.data?.error || 'Failed to load company profile.'
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
-})
 
 const handleLogoUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -56,11 +44,11 @@ const updateProfile = async () => {
 
   try {
     const formData = new FormData()
-    formData.append('name', company.value.name)
-    formData.append('description', company.value.description)
-    formData.append('address', company.value.address)
-    formData.append('phone', company.value.phone)
-    formData.append('email', company.value.email)
+    formData.append('name', localCompany.value.name)
+    formData.append('description', localCompany.value.description)
+    formData.append('address', localCompany.value.address)
+    formData.append('phone', localCompany.value.phone)
+    formData.append('email', localCompany.value.email)
     if (newLogo.value) {
       formData.append('logo', newLogo.value)
     }
@@ -71,11 +59,15 @@ const updateProfile = async () => {
         Authorization: `Bearer ${authStore.token}`,
       },
     })
-    company.value = response.data
+    companyStore.company = response.data
     newLogo.value = null // Clear selected file
     successMessage.value = 'Company profile updated successfully!'
-  } catch (err: any) {
-    errorMessage.value = err.response?.data?.error || 'Failed to update company profile.'
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      errorMessage.value = err.response?.data?.error || 'Failed to update company profile.'
+    } else {
+      errorMessage.value = 'An unexpected error occurred.'
+    }
     console.error(err)
   } finally {
     submitting.value = false
@@ -91,14 +83,14 @@ const updateProfile = async () => {
     <div v-else-if="errorMessage && !successMessage" class="text-center py-8 text-primary-red">
       {{ errorMessage }}
     </div>
-    <div v-else class="bg-secondary-black p-8 rounded-lg shadow-lg">
+    <div v-else-if="localCompany" class="bg-secondary-black p-8 rounded-lg shadow-lg">
       <form @submit.prevent="updateProfile" class="space-y-6">
         <div>
           <label for="name" class="block text-text-dark text-sm font-bold mb-2">Company Name:</label>
           <input
             type="text"
             id="name"
-            v-model="company.name"
+            v-model="localCompany.name"
             class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black leading-tight focus:outline-none focus:shadow-outline"
             required
           />
@@ -109,7 +101,7 @@ const updateProfile = async () => {
           >
           <textarea
             id="description"
-            v-model="company.description"
+            v-model="localCompany.description"
             rows="5"
             class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black leading-tight focus:outline-none focus:shadow-outline"
           ></textarea>
@@ -119,7 +111,7 @@ const updateProfile = async () => {
           <input
             type="text"
             id="address"
-            v-model="company.address"
+            v-model="localCompany.address"
             class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
@@ -128,7 +120,7 @@ const updateProfile = async () => {
           <input
             type="text"
             id="phone"
-            v-model="company.phone"
+            v-model="localCompany.phone"
             class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
@@ -137,7 +129,7 @@ const updateProfile = async () => {
           <input
             type="email"
             id="email"
-            v-model="company.email"
+            v-model="localCompany.email"
             class="shadow appearance-none border border-border-color rounded w-full py-2 px-3 text-text-light bg-primary-black leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
@@ -150,11 +142,11 @@ const updateProfile = async () => {
             accept="image/*"
             class="block w-full text-sm text-text-dark file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-black file:text-primary-red hover:file:bg-secondary-black"
           />
-          <div v-if="company.logo" class="mt-4">
+          <div v-if="localCompany.logo" class="mt-4">
             <p class="text-text-dark">Current Logo:</p>
             <img
-              :src="`${API_URL}${company.logo}`"
-              :alt="company.name"
+              :src="`${API_URL}${localCompany.logo}`"
+              :alt="localCompany.name"
               class="h-24 w-24 object-contain mt-2 border border-border-color rounded p-1"
             />
           </div>

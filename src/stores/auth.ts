@@ -42,8 +42,12 @@ export const useAuthStore = defineStore('auth', {
         };
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
         return true;
-      } catch (err: any) {
-        this.error = err.response?.data?.error || 'Login failed';
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          this.error = err.response?.data?.error || 'Login failed';
+        } else {
+          this.error = 'An unexpected error occurred.';
+        }
         this.token = null;
         this.user = null;
         localStorage.removeItem('token');

@@ -1,15 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import axios from 'axios';
 import { API_URL } from '@/config';
+import { useCompanyStore } from '@/stores/company';
+import { storeToRefs } from 'pinia';
 
-interface Company {
-  address?: string;
-  phone?: string;
-  email?: string;
-}
-
-const company = ref<Company>({});
 const name = ref('');
 const email = ref('');
 const message = ref('');
@@ -17,14 +12,8 @@ const successMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 const loading = ref(false);
 
-onMounted(async () => {
-  try {
-    const response = await axios.get(`${API_URL}/api/company`);
-    company.value = response.data;
-  } catch (error) {
-    console.error('Error fetching company contact info:', error);
-  }
-});
+const companyStore = useCompanyStore();
+const { company } = storeToRefs(companyStore);
 
 const submitForm = async () => {
   loading.value = true;
@@ -41,8 +30,12 @@ const submitForm = async () => {
     name.value = '';
     email.value = '';
     message.value = '';
-  } catch (error: any) {
-    errorMessage.value = error.response?.data?.error || 'Failed to send message. Please try again.';
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      errorMessage.value = error.response?.data?.error || 'Failed to send message. Please try again.';
+    } else {
+      errorMessage.value = 'An unexpected error occurred.';
+    }
   } finally {
     loading.value = false;
   }
@@ -102,7 +95,7 @@ const submitForm = async () => {
       </div>
 
       <!-- Company Info -->
-      <div>
+      <div v-if="company">
         <h2 class="text-2xl font-semibold text-gray-700 mb-4">Our Contact Information</h2>
         <div class="space-y-2 text-gray-700">
           <p v-if="company.address"><strong>Address:</strong> {{ company.address }}</p>
